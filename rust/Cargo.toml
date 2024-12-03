@@ -10,3 +10,4 @@ bench = false
 
 [dependencies]
 maplit = "1.0.2"
+nom = "7.1.3"
