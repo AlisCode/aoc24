@@ -1,8 +1,8 @@
-use std::collections::{HashMap, HashSet};
+use fxhash::{FxBuildHasher, FxHashMap, FxHashSet};
 
 use aoc24::aoc;
 
-fn parse(input: &str) -> HashMap<(i32, i32), char> {
+fn parse(input: &str) -> FxHashMap<(i32, i32), char> {
     input
         .lines()
         .enumerate()
@@ -14,16 +14,16 @@ fn parse(input: &str) -> HashMap<(i32, i32), char> {
         .collect()
 }
 
-type Regions = Vec<HashSet<(i32, i32)>>;
-fn parse_regions(grid: HashMap<(i32, i32), char>) -> Regions {
-    let mut close: HashSet<(i32, i32)> = HashSet::default();
+type Regions = Vec<FxHashSet<(i32, i32)>>;
+fn parse_regions(grid: FxHashMap<(i32, i32), char>) -> Regions {
+    let mut close: FxHashSet<(i32, i32)> = FxHashSet::default();
     let mut regions = Vec::with_capacity(100);
 
     for ((x, y), c) in &grid {
         if close.contains(&(*x, *y)) {
             continue;
         }
-        let mut region = HashSet::new();
+        let mut region = FxHashSet::default();
         populate_region(&mut region, &grid, &mut close, *x, *y, *c);
         regions.push(region);
     }
@@ -32,9 +32,9 @@ fn parse_regions(grid: HashMap<(i32, i32), char>) -> Regions {
 }
 
 fn populate_region(
-    region: &mut HashSet<(i32, i32)>,
-    grid: &HashMap<(i32, i32), char>,
-    closed: &mut HashSet<(i32, i32)>,
+    region: &mut FxHashSet<(i32, i32)>,
+    grid: &FxHashMap<(i32, i32), char>,
+    closed: &mut FxHashSet<(i32, i32)>,
     x: i32,
     y: i32,
     c: char,
@@ -61,7 +61,7 @@ const DIRECTIONS: [Direction; 4] = [
     Direction::Top,
 ];
 
-fn compute_perimeter(region: &HashSet<(i32, i32)>) -> usize {
+fn compute_perimeter(region: &FxHashSet<(i32, i32)>) -> usize {
     let mut perimeter = 0;
     for (x, y) in region {
         for (nx, ny) in NEIGHBORS {
@@ -82,8 +82,8 @@ enum Direction {
     Top,
 }
 
-fn compute_perimeter_discounted(region: &HashSet<(i32, i32)>) -> usize {
-    let mut perimeter = HashSet::<((i32, i32), Direction)>::default();
+fn compute_perimeter_discounted(region: &FxHashSet<(i32, i32)>) -> usize {
+    let mut perimeter = FxHashSet::<((i32, i32), Direction)>::default();
     for (x, y) in region {
         for ((nx, ny), dir) in NEIGHBORS.iter().zip(DIRECTIONS) {
             let n = (x + nx, y + ny);
@@ -93,7 +93,8 @@ fn compute_perimeter_discounted(region: &HashSet<(i32, i32)>) -> usize {
         }
     }
 
-    let mut close: HashSet<((i32, i32), Direction)> = HashSet::with_capacity(perimeter.len());
+    let mut close: FxHashSet<((i32, i32), Direction)> =
+        FxHashSet::with_capacity_and_hasher(perimeter.len(), FxBuildHasher::default());
     let mut sides = 0;
     for (pos, dir) in &perimeter {
         sides += populate_side_in_closed_list(&mut close, &perimeter, pos.0, pos.1, *dir);
@@ -102,8 +103,8 @@ fn compute_perimeter_discounted(region: &HashSet<(i32, i32)>) -> usize {
 }
 
 fn populate_side_in_closed_list(
-    close: &mut HashSet<((i32, i32), Direction)>,
-    perim: &HashSet<((i32, i32), Direction)>,
+    close: &mut FxHashSet<((i32, i32), Direction)>,
+    perim: &FxHashSet<((i32, i32), Direction)>,
     x: i32,
     y: i32,
     dir: Direction,
@@ -179,11 +180,11 @@ EEEC";
     fn day12_parse_regions() {
         let grid = parse(SIMPLE_INPUT);
         let regions = parse_regions(grid);
-        let a = HashSet::<(i32, i32)>::from_iter([(0, 0), (1, 0), (2, 0), (3, 0)]);
-        let b = HashSet::<(i32, i32)>::from_iter([(0, 1), (1, 1), (0, 2), (1, 2)]);
-        let c = HashSet::<(i32, i32)>::from_iter([(2, 1), (2, 2), (3, 2), (3, 3)]);
-        let d = HashSet::<(i32, i32)>::from_iter([(3, 1)]);
-        let e = HashSet::<(i32, i32)>::from_iter([(0, 3), (1, 3), (2, 3)]);
+        let a = FxHashSet::<(i32, i32)>::from_iter([(0, 0), (1, 0), (2, 0), (3, 0)]);
+        let b = FxHashSet::<(i32, i32)>::from_iter([(0, 1), (1, 1), (0, 2), (1, 2)]);
+        let c = FxHashSet::<(i32, i32)>::from_iter([(2, 1), (2, 2), (3, 2), (3, 3)]);
+        let d = FxHashSet::<(i32, i32)>::from_iter([(3, 1)]);
+        let e = FxHashSet::<(i32, i32)>::from_iter([(0, 3), (1, 3), (2, 3)]);
         assert!(regions.contains(&a));
         assert!(regions.contains(&b));
         assert!(regions.contains(&c));
@@ -193,19 +194,19 @@ EEEC";
 
     #[test]
     fn day12_perimeters() {
-        let a = HashSet::<(i32, i32)>::from_iter([(0, 0), (1, 0), (2, 0), (3, 0)]);
+        let a = FxHashSet::<(i32, i32)>::from_iter([(0, 0), (1, 0), (2, 0), (3, 0)]);
         assert_eq!(compute_perimeter(&a), 10);
 
-        let b = HashSet::<(i32, i32)>::from_iter([(0, 1), (1, 1), (0, 2), (1, 2)]);
+        let b = FxHashSet::<(i32, i32)>::from_iter([(0, 1), (1, 1), (0, 2), (1, 2)]);
         assert_eq!(compute_perimeter(&b), 8);
 
-        let c = HashSet::<(i32, i32)>::from_iter([(2, 1), (2, 2), (3, 2), (3, 3)]);
+        let c = FxHashSet::<(i32, i32)>::from_iter([(2, 1), (2, 2), (3, 2), (3, 3)]);
         assert_eq!(compute_perimeter(&c), 10);
 
-        let d = HashSet::<(i32, i32)>::from_iter([(3, 1)]);
+        let d = FxHashSet::<(i32, i32)>::from_iter([(3, 1)]);
         assert_eq!(compute_perimeter(&d), 4);
 
-        let e = HashSet::<(i32, i32)>::from_iter([(0, 3), (1, 3), (2, 3)]);
+        let e = FxHashSet::<(i32, i32)>::from_iter([(0, 3), (1, 3), (2, 3)]);
         assert_eq!(compute_perimeter(&e), 8);
     }
 }
