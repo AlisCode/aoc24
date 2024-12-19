@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use fxhash::FxHashMap;
 
 use aoc24::aoc;
 
@@ -16,7 +16,11 @@ fn parse(input: &str) -> Input {
     Input { patterns, designs }
 }
 
-fn solve_design(memo: &mut HashMap<String, usize>, design: &str, patterns: &[&str]) -> usize {
+fn solve_design<'a>(
+    memo: &mut FxHashMap<&'a str, usize>,
+    design: &'a str,
+    patterns: &[&'a str],
+) -> usize {
     if let Some(memoed) = memo.get(design) {
         return *memoed;
     }
@@ -34,14 +38,14 @@ fn solve_design(memo: &mut HashMap<String, usize>, design: &str, patterns: &[&st
             }
         })
         .sum();
-    memo.insert(design.to_string(), solved);
+    memo.insert(design, solved);
     solved
 }
 
 fn part_one(input: &str) -> usize {
     let Input { patterns, designs } = parse(input);
 
-    let mut memo = HashMap::default();
+    let mut memo = FxHashMap::default();
     designs
         .into_iter()
         .filter(|design| solve_design(&mut memo, design, &patterns) > 0)
@@ -51,7 +55,7 @@ fn part_one(input: &str) -> usize {
 fn part_two(input: &str) -> usize {
     let Input { patterns, designs } = parse(input);
 
-    let mut memo = HashMap::default();
+    let mut memo = FxHashMap::default();
     designs
         .into_iter()
         .map(|design| solve_design(&mut memo, design, &patterns))
